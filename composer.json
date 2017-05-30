@@ -1,0 +1,28 @@
+{
+    "name": "hsrzq/super-down",
+    "description": "A parser library for superdown text, which is similar as markdown, but more powerful and strict.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "zhangqi",
+            "email": "me@zhangqi.space",
+            "homepage": "https://github.com/hsrzq",
+            "role": "Owner"
+        }
+    ],
+    "support": {
+        "email": "me@zhangqi.space",
+        "issues": "https://github.com/hsrzq/SuperDown/issues",
+        "wiki": "https://github.com/hsrzq/SuperDown/wiki",
+        "source": "https://github.com/hsrzq/SuperDown"
+    },
+    "require": {
+        "php": ">=5.5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        }
+    }
+}
