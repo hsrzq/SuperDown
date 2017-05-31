@@ -1,0 +1,122 @@
+^^^
+BLK: 4
+TOC: 2
+H2: Chapter {H2}. {HH}
+H3: {H2}.{H3}. {HH}
+ATL: true
+^^^
+
+# SUPERDOWN TEXT SAMPLE
+[toc]
+
+## INLINE FORMAT
+`Inline code` is put text in \`;
+**Strong** format is put text in two \*;\
+//Italic// format is put text in two \/;
+__Underline__ format is put text in two \_;\
+~~Strickout~~ format is put text in two \~;
+Three \- can make a horizontal line;\
+Put a \\ in end of a line if you want to make a new line.\
+
+
+~~__//**Nest** inline// format__ sample~~\
+
+
+Link[^mark 1] and image are similar as markdown[^mark 2].
+This code is on GitHub: https://github.com/hsrzq/SuperDown
+[my homepage][homepage] [google](https://www.google.com)\
+![my avatar][gravatar]
+![github avatar](https://avatars1.githubusercontent.com/u/3351639)
+
+---
+
+## LIST FORMAT
+
+### Ordered list
+1. OL item 1
+1. OL item 2
+1. OL item 3
+
+### Unordered list
++ UL item 1
++ UL item 2
++ UL item 3
+
+### Definition list
+; item 1
+: item 1 Definition
+; item 2
+: item 2 Definition
+; item 3
+: item 3 Definition
+
+### Task list
+- [ ] TL item 1
+- [x] TL item 2
+- [X] TL item 2
+
+### List nest
+1. parent item 1
+    1. child item 1
+    1. child item 2
+1. parent item 2
+    + child item 3
+        + grand item 1
+    + child item 4
+        1. grand item 2
+        1. grand item 3
+1. parent item 3
+
+## TABLE FORMAT
+
+### Normal table
+| this is title1 | this is title2 | this is title3 |
+|:---------------|:--------------:|---------------:|
+| item 1         | item 2         | item 3         |
+| item 4         | item 5         | item 6         |
+
+### Simple table
+| item 1 | item 2 | item 3 |
+| item 4 | item 5 | item 6 |
+
+### Table without header
+|:--------------:|:---------------|---------------:|
+| this is item 1 | this is item 2 | this is item 3 |
+| item 4         | item 5         | item 6         |
+
+### Table with footer
+| this is title1 | this is title2 | this is title3 |
+|:===============|:==============:|===============:|
+| item 1         | item 2         | item 3         |
+| item 4         | item 5         | item 6         |
+
+### Table with caption
+|=-       this is long long table caption        -=|
+| this is title1 | this is title2 | this is title3 |
+|:---------------|:--------------:|---------------:|
+| item 1         | item 2         | item 3         |
+| item 4         | item 5         | item 6         |
+
+### Table with colspan
+| this is col spans title        || this is title3 |
+|:---------------|:--------------:|---------------:|
+| item 1         | item 2         | item 3         |
+| item 4                         || item 5         |
+| item 6         | item 7                         ||
+| item 8                                         |||
+
+## CODE FORMAT
+```Java
+package top.techqi;
+public class Program {
+    public static void main(String[] args) {
+        System.out.println(args);
+    }
+}
+```
+
+[homepage]: https://www.techqi.top
+[gravatar]: http://www.gravatar.com/avatar/1f9db4bdef9d9c62be02feda9965c6fd?s=220&r=X&d=mm
+
+[^mark 1]: Only support web url link.
+[^mark 2]: Markdown is a text-to-HTML conversion tool for web writers.
