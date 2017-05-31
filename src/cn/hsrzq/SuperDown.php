@@ -33,4 +33,46 @@ namespace cn\hsrzq;
  */
 class SuperDown
 {
+    /**
+     * @var int Nest indent space(blank) count
+     */
+    private $cfgBLK = 4;
+    /**
+     * @var int Table of contents level
+     */
+    private $cfgTOC = 2;
+    /**
+     * @var array Head N format
+     */
+    private $cfgHNF = [];
+    /**
+     * @var bool If auto link enabled
+     */
+    private $cfgATL = false;
+
+    /**
+     * @var string Raw SuperDown text
+     */
+    private $text;
+
+    public function __construct($text)
+    {
+        $this->text = $text;
+    }
+
+    public function makeHtml()
+    {
+        $lines = explode("\n", $this->text);
+        $this->parseConfig($lines);
+        return $this->parseLines($lines, true);
+    }
+
+    private function parseConfig(array &$lines)
+    {
+    }
+
+    private function parseLines(array $lines, $nested = false)
+    {
+        return '';
+    }
 }
