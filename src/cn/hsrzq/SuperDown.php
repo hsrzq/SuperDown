@@ -126,6 +126,11 @@ class SuperDown
 
         foreach ($lines as $key => $line) {
             switch (true) {
+                // horizontal line
+                case $nested && preg_match('/^\-{3,}$/', $line): {
+                    $blocks[++$position] = ['hr', $key, $key];
+                    break;
+                }
                 default: {
                     $blocks[++$position] = ['normal', $key, $key];
                     break;
@@ -133,6 +138,11 @@ class SuperDown
             }
         }
         return $blocks;
+    }
+
+    private function makeHr()
+    {
+        return "<hr />";
     }
 
     private function makeNormal(array $lines, $block)
