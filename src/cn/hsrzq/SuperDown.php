@@ -145,6 +145,12 @@ class SuperDown
             function ($matches) use ($remove) {
                 return $remove ? $matches[2] : "<s>$matches[2]</s>";
             }, $text);
+        // auto link
+        if ($this->cfgATL) {
+            $text = preg_replace_callback('/(?:^|\s)(https?:\/\/\S+)(?:$|\s)/', function ($matches) {
+                return "<a href='$matches[1]'>$matches[1]</a>";
+            }, $text);
+        }
 
         return $this->escapeSymbol($text);
     }
