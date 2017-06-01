@@ -106,7 +106,47 @@ class SuperDown
 
     private function parseLines(array $lines, $nested = false)
     {
-        return '';
+        $html = '';
+        foreach ($lines as $key => $line) {
+            $html .= $this->makeInline($line);
+        }
+        return $html;
+    }
+
+    private function makeInline($text, $remove = false)
+    {
+        // code
+        $text = preg_replace_callback(
+            '/(?<!\\\\)(`)([^`]+?)(?<!\\\\)\1/',
+            function ($matches) use ($remove) {
+                return $remove ? $matches[2] : "<code>$matches[2]</code>";
+            }, $text);
+        // strong
+        $text = preg_replace_callback(
+            '/(?<!\\\\)(\*{2})(.+?)(?<!\\\\)\1/',
+            function ($matches) use ($remove) {
+                return $remove ? $matches[2] : "<strong>$matches[2]</strong>";
+            }, $text);
+        // italic
+        $text = preg_replace_callback(
+            '/(?<!\\\\)(\/{2})(.+?)(?<!\\\\)\1/',
+            function ($matches) use ($remove) {
+                return $remove ? $matches[2] : "<i>$matches[2]</i>";
+            }, $text);
+        // underline
+        $text = preg_replace_callback(
+            '/(?<!\\\\)(_{2})(.+?)(?<!\\\\)\1/',
+            function ($matches) use ($remove) {
+                return $remove ? $matches[2] : "<u>$matches[2]</u>";
+            }, $text);
+        // strickout
+        $text = preg_replace_callback(
+            '/(?<!\\\\)(~{2})(.+?)(?<!\\\\)\1/',
+            function ($matches) use ($remove) {
+                return $remove ? $matches[2] : "<s>$matches[2]</s>";
+            }, $text);
+
+        return $this->escapeSymbol($text);
     }
 
     private function escapeSymbol($text)
