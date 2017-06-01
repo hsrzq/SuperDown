@@ -106,11 +106,41 @@ class SuperDown
 
     private function parseLines(array $lines, $nested = false)
     {
+        // block = [type, start, end, extra]
+        $blocks = $this->parseBlock($lines, $nested);
+
         $html = '';
-        foreach ($lines as $key => $line) {
-            $html .= $this->makeInline($line);
+        foreach ($blocks as $block) {
+            $method = 'make' . ucfirst($block[0]);
+
+            $result = $this->{$method}($lines, $block) . "\n";
+            $html .= $result;
         }
         return $html;
+    }
+
+    private function parseBlock(array $lines, $nested)
+    {
+        $position = -1;
+        $blocks = [];
+
+        foreach ($lines as $key => $line) {
+            switch (true) {
+                default: {
+                    $blocks[++$position] = ['normal', $key, $key];
+                    break;
+                }
+            }
+        }
+        return $blocks;
+    }
+
+    private function makeNormal(array $lines, $block)
+    {
+        list($type, $start, $end, $extra) = $block;
+
+        $text = implode(' ', array_slice($lines, $start, $end - $start + 1));
+        return $this->makeInline($text);
     }
 
     private function makeInline($text, $remove = false)
