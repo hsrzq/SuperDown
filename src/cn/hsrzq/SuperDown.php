@@ -131,6 +131,15 @@ class SuperDown
                     $blocks[++$position] = ['hr', $key, $key];
                     break;
                 }
+                // head
+                case $nested && preg_match('/^(#+)(.*)$/', $line, $matches): {
+                    $level = strlen($matches[1]);
+                    $name = trim($matches[2], ' #');
+                    if ($name == '') continue;
+
+                    $blocks[++$position] = ['hn', $key, $key, $level];
+                    break;
+                }
                 default: {
                     $blocks[++$position] = ['normal', $key, $key];
                     break;
@@ -143,6 +152,14 @@ class SuperDown
     private function makeHr()
     {
         return "<hr />";
+    }
+
+    private function makeHn(array $lines, array $block)
+    {
+        list($type, $start, $end, $extra) = $block;
+
+        $text = $this->makeInline(trim($lines[$start], '# '));
+        return "<h{$extra}>{$text}</h{$extra}>";
     }
 
     private function makeNormal(array $lines, $block)
