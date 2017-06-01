@@ -36,19 +36,19 @@ class SuperDown
     /**
      * @var int Nest indent space(blank) count
      */
-    private $cfgBLK = 4;
+    public $cfgBLK = 4;
     /**
      * @var int Table of contents level
      */
-    private $cfgTOC = 2;
+    public $cfgTOC = 2;
     /**
      * @var array Head N format
      */
-    private $cfgHNF = [];
+    public $cfgHNF = [];
     /**
      * @var bool If auto link enabled
      */
-    private $cfgATL = false;
+    public $cfgATL = false;
 
     /**
      * @var string Raw SuperDown text
@@ -69,6 +69,39 @@ class SuperDown
 
     private function parseConfig(array &$lines)
     {
+        $config = false;
+        foreach ($lines as $key => $line) {
+            switch (true) {
+                case $key == 0 && !preg_match('/^(\^{3,})$/', $line): {
+                    return;
+                }
+                case preg_match('/^(\^{3,})$/', $line): {
+                    if (!$config) {
+                        $config = true;
+                        break;
+                    } else {
+                        $lines = array_slice($lines, $key + 1);
+                        return;
+                    }
+                }
+                case preg_match('/^BLK:\s*(\d{1,})\s*$/', $line, $matches): {
+                    $this->cfgBLK = $matches[1];
+                    break;
+                }
+                case preg_match('/^TOC:\s*([1-7])\s*$/', $line, $matches): {
+                    $this->cfgTOC = $matches[1];
+                    break;
+                }
+                case preg_match('/^H([1-7]):(.+)$/', $line, $matches): {
+                    $this->cfgHNF[$matches[1]] = trim($matches[2]);
+                    break;
+                }
+                case preg_match('/^ATL:\s*(true|false)\s*$/', $line, $matches): {
+                    $this->cfgATL = $matches[1] == 'true';
+                    break;
+                }
+            }
+        }
     }
 
     private function parseLines(array $lines, $nested = false)
