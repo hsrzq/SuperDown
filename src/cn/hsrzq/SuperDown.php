@@ -55,6 +55,8 @@ class SuperDown
      */
     private $text;
 
+    private $headings = [];
+
     public function __construct($text)
     {
         $this->text = $text;
@@ -137,7 +139,28 @@ class SuperDown
                     $name = trim($matches[2], ' #');
                     if ($name == '') continue;
 
-                    $blocks[++$position] = ['hn', $key, $key, $level];
+                    $indexes = [];
+                    $heading = &$this->headings;
+                    for ($i = 0; $i < $level - 1; $i++) {
+                        if (empty($heading)) $heading[] = [];
+                        $index = count($heading) - 1;
+                        $indexes[] = $index;
+                        $heading[$index][1] = $indexes;
+
+                        // sub head
+                        $heading = &$heading[$index][2];
+                    }
+                    $heading[] = [$name];
+                    $index = count($heading) - 1;
+                    $indexes[] = $index;
+
+                    $heading[$index][1] = $indexes;
+                    $blocks[++$position] = ['hn', $key, $key, [$level, $indexes]];
+                    break;
+                }
+                // table of contents
+                case $nested && preg_match('/^\[toc\]$/i', $line): {
+                    $blocks[++$position] = ['toc', $key, $key];
                     break;
                 }
                 default: {
@@ -158,8 +181,41 @@ class SuperDown
     {
         list($type, $start, $end, $extra) = $block;
 
+        $level = $extra[0];
+        $indexes = $extra[1];
         $text = $this->makeInline(trim($lines[$start], '# '));
-        return "<h{$extra}>{$text}</h{$extra}>";
+        if (isset($this->cfgHNF[$level])) {
+            $text = preg_replace_callback(
+                '/(?<!\\\\)\{H(\d|H)(?<!\\\\)\}/',
+                function ($matches) use ($level, $indexes, $text) {
+                    $match = $matches[1];
+                    if ($match == 'H') {
+                        return $text;
+                    } elseif ($match <= $level) {
+                        return $indexes[$match - 1] + 1;
+                    } else {
+                        return $matches[0];
+                    }
+                }, $this->cfgHNF[$level]);
+        }
+        $id = 'hn-' . implode('-', $indexes);
+        return "<h{$level} id='$id'>{$text}</h{$level}>";
+    }
+
+    private function makeToc()
+    {
+        $headings = $this->headings;
+        // filter heading level
+        for ($i = 0; $i < $this->cfgTOC - 1; $i++) {
+            $result = [];
+            foreach ($headings as $heading) {
+                if (isset($heading[2])) {
+                    $result = array_merge($result, $heading[2]);
+                }
+            }
+            $headings = $result;
+        }
+        return $this->makeTocEntry($headings);
     }
 
     private function makeNormal(array $lines, $block)
@@ -217,5 +273,40 @@ class SuperDown
         return str_replace(
             ['\[', '\]', '\(', '\)', '\|', '\=', '\-', '\+', '\`', '\*', '\/', '\_', '\~', '\\\\'],
             ['[', ']', '(', ')', '|', '=', '-', '+', '`', '*', '/', '_', '~', '\\'], $text);
+    }
+
+    private function makeTocEntry($tocs)
+    {
+        $html = "<ul>";
+        foreach ($tocs as $toc) {
+            $html .= "<li>";
+            $name = $toc[0] ?: 'title-' . implode('-', $toc[1]);
+            $level = count($toc[1]);
+            $indexes = $toc[1];
+            $id = 'hn-' . implode('-', $toc[1]);
+            $text = $this->makeInline($name, true);
+            if (isset($this->cfgHNF[$level])) {
+                $text = preg_replace_callback(
+                    '/(?<!\\\\)\{H(\d|H)(?<!\\\\)\}/',
+                    function ($matches) use ($level, $indexes, $text) {
+                        $match = $matches[1];
+                        if ($match == 'H') {
+                            return $text;
+                        } elseif ($match <= $level) {
+                            return $indexes[$match - 1] + 1;
+                        } else {
+                            return $matches[0];
+                        }
+                    }, $this->cfgHNF[$level]);
+            }
+            $html .= "<a href='#$id'>$text</a>";
+            $html .= "</li>";
+
+            if (isset($toc[2])) {
+                $html .= $this->makeTocEntry($toc[2]);
+            }
+        }
+        $html .= "</ul>";
+        return $html;
     }
 }
