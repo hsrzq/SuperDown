@@ -491,6 +491,30 @@ class SuperDown
                 $url = $this->extlinks[trim($matches[2])];
                 return "<a href='{$url}'>{$alt}</a>";
             }, $text);
+        // image straight
+        $text = preg_replace_callback(
+            '/(?<!\\\\)!\['// ![
+            . '((?:[^\]]|\\\\\]|\\\\\[)+)'// alt
+            . '(?<!\\\\)\]\s*\('// ] (
+            . '((?:[^\)]|\\\\\)|\\\\\()+)'// url
+            . '(?<!\\\\)\)/',// )
+            function ($matches) {
+                $alt = trim($matches[1]);
+                $url = trim($matches[2]);
+                return "<img src='{$url}' alt='{$alt}' title='{$alt}' />";
+            }, $text);
+        // link straight
+        $text = preg_replace_callback(
+            '/(?<!\\\\)\['// ![
+            . '((?:[^\]]|\\\\\]|\\\\\[)+)'// alt
+            . '(?<!\\\\)\]\s*\('// ] (
+            . '((?:[^\)]|\\\\\)|\\\\\()+)'// url
+            . '(?<!\\\\)\)/',// )
+            function ($matches) {
+                $alt = trim($matches[1]);
+                $url = trim($matches[2]);
+                return "<a href='{$url}'>{$alt}</a>";
+            }, $text);
         // auto link
         if ($this->cfgATL) {
             $text = preg_replace_callback('/(?:^|\s)(https?:\/\/\S+)(?:$|\s)/', function ($matches) {
