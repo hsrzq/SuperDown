@@ -129,15 +129,27 @@ class SuperDown
         $position = -1;
         $blocks = [];
 
+        $paragraph = false;
+        // analyze by line
         foreach ($lines as $key => $line) {
             switch (true) {
                 // horizontal line
                 case $nested && preg_match('/^\-{3,}$/', $line): {
+                    if ($paragraph) {// has opened paragraph
+                        $blocks[++$position] = ['pge', $key, $key];// paragraph end
+                        $paragraph = false;
+                    }
+
                     $blocks[++$position] = ['hr', $key, $key];
                     break;
                 }
                 // head
                 case $nested && preg_match('/^(#+)(.*)$/', $line, $matches): {
+                    if ($paragraph) {// has opened paragraph
+                        $blocks[++$position] = ['pge', $key, $key];// paragraph end
+                        $paragraph = false;
+                    }
+
                     $level = strlen($matches[1]);
                     $name = trim($matches[2], ' #');
                     if ($name == '') continue;
@@ -260,6 +272,18 @@ class SuperDown
                 // extlinks
                 case preg_match('/^(?<!\\\\)\[((?:[^\]]|\\\\\]|\\\\\[)+)(?<!\\\\)\]:(.*)$/', $line, $matches): {
                     $this->extlinks[trim($matches[1])] = trim($matches[2]);
+                    break;
+                }
+                // paragraph
+                case $line == '': {
+                    if ($lines[$key - 1] == '' && preg_match('/\w+/', $lines[$key + 1], $matches)) {
+                        if ($paragraph) {// has opened paragraph
+                            $blocks[++$position] = ['pge', $key, $key];// paragraph end
+                        }
+                        // prev line is empty and next line is not empty
+                        $blocks[++$position] = ['pgs', $key, $key];// paragraph start
+                        $paragraph = true;
+                    }
                     break;
                 }
                 // indent line, maybe nested list
@@ -417,6 +441,16 @@ class SuperDown
         $html .= "<tbody>" . $this->makeTableRows(array_slice($lines, $start, $end - $start + 1), $extra['aligns']) . "</tbody>";
         $html .= "</table>";
         return $html;
+    }
+
+    private function makePgs()
+    {
+        return "<p>";
+    }
+
+    private function makePge()
+    {
+        return "</p>";
     }
 
     private function makeNormal(array $lines, $block)
