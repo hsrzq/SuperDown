@@ -192,6 +192,15 @@ class SuperDown
                     }
                     break;
                 }
+                // task list
+                case preg_match('/^\- \[[ x]\]/i', $line, $matches): {
+                    if ($blocks[$position] && $blocks[$position][0] == 'tl') {
+                        $blocks[$position][2] = $key;
+                    } else {
+                        $blocks[++$position] = ['tl', $key, $key];
+                    }
+                    break;
+                }
                 default: {
                     $blocks[++$position] = ['normal', $key, $key];
                     break;
@@ -287,6 +296,23 @@ class SuperDown
             $html .= "<$tag>" . $this->parseLines(array_slice($lines, $block[0], $block[1] - $block[0] + 1)) . "</$tag>";
         }
         $html .= "</dl>";
+        return $html;
+    }
+
+    private function makeTl(array $lines, array $block)
+    {
+        list($type, $start, $end, $extra) = $block;
+        $lines = array_slice($lines, $start, $end - $start + 1);
+
+        $blocks = $this->parseList($lines, '/^(?:\- \[([ xX])\])(.+)$/');
+        $html = "<ul>";
+        foreach ($blocks as $block) {
+            $checked = $block[2] == ' ' ? '' : 'checked';
+            $html .= "<li><input type='checkbox' disabled $checked/>"
+                . $this->parseLines(array_slice($lines, $block[0], $block[1] - $block[0] + 1))
+                . "</li>";
+        }
+        $html .= "</ul>";
         return $html;
     }
 
