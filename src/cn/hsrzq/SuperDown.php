@@ -57,6 +57,7 @@ class SuperDown
 
     private $headings = [];
     private $footnotes = [];
+    private $extlinks = [];
 
     public function __construct($text)
     {
@@ -254,6 +255,11 @@ class SuperDown
                 // footnote
                 case preg_match('/^(?<!\\\\)\[\^((?:[^\]]|\\\\\]|\\\\\[)+)(?<!\\\\)\]:(.*)$/', $line, $matches) && $nested: {
                     $this->footnotes[trim($matches[1])] = $matches[2];
+                    break;
+                }
+                // extlinks
+                case preg_match('/^(?<!\\\\)\[((?:[^\]]|\\\\\]|\\\\\[)+)(?<!\\\\)\]:(.*)$/', $line, $matches): {
+                    $this->extlinks[trim($matches[1])] = trim($matches[2]);
                     break;
                 }
                 // indent line, maybe nested list
@@ -460,6 +466,30 @@ class SuperDown
                 $id = md5($matches[1]);
                 $text = $this->escapeSymbol($matches[1]);
                 return $remove ? "" : "<sup><a href='#fn-{$id}'>{$text}</a></sup>";
+            }, $text);
+        // image indirect
+        $text = preg_replace_callback(
+            '/(?<!\\\\)!\['// ![
+            . '((?:[^\]]|\\\\\]|\\\\\[)+)'// alt
+            . '(?<!\\\\)\]\s*\['// ] [
+            . '((?:[^\]]|\\\\\]|\\\\\[)+)'// id
+            . '(?<!\\\\)\]/',// ]
+            function ($matches) {
+                $alt = $matches[1];
+                $url = $this->extlinks[trim($matches[2])];
+                return "<img src='{$url}' alt='{$alt}' title='{$alt}' />";
+            }, $text);
+        // link indirect
+        $text = preg_replace_callback(
+            '/(?<!\\\\)\['// ![
+            . '((?:[^\]]|\\\\\]|\\\\\[)+)'// alt
+            . '(?<!\\\\)\]\s*\['// ] [
+            . '((?:[^\]]|\\\\\]|\\\\\[)+)'// id
+            . '(?<!\\\\)\]/',// ]
+            function ($matches) {
+                $alt = $matches[1];
+                $url = $this->extlinks[trim($matches[2])];
+                return "<a href='{$url}'>{$alt}</a>";
             }, $text);
         // auto link
         if ($this->cfgATL) {
