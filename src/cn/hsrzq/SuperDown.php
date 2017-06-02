@@ -56,6 +56,7 @@ class SuperDown
     private $text;
 
     private $headings = [];
+    private $footnotes = [];
 
     public function __construct($text)
     {
@@ -66,7 +67,8 @@ class SuperDown
     {
         $lines = explode("\n", $this->text);
         $this->parseConfig($lines);
-        return $this->parseLines($lines, true);
+        return $this->parseLines($lines, true)
+            . $this->makeFootnote();
     }
 
     private function parseConfig(array &$lines)
@@ -247,6 +249,11 @@ class SuperDown
                             break;
                         }
                     }
+                    break;
+                }
+                // footnote
+                case preg_match('/^(?<!\\\\)\[\^((?:[^\]]|\\\\\]|\\\\\[)+)(?<!\\\\)\]:(.*)$/', $line, $matches) && $nested: {
+                    $this->footnotes[trim($matches[1])] = $matches[2];
                     break;
                 }
                 // indent line, maybe nested list
@@ -446,6 +453,14 @@ class SuperDown
             function ($matches) use ($remove) {
                 return $remove ? $matches[2] : "<s>$matches[2]</s>";
             }, $text);
+        // footnote
+        $text = preg_replace_callback(
+            '/(?<!\\\\)\[\^((?:[^\]]|\\\\\]|\\\\\[)+)(?<!\\\\)\]/',
+            function ($matches) use ($remove) {
+                $id = md5($matches[1]);
+                $text = $this->escapeSymbol($matches[1]);
+                return $remove ? "" : "<sup><a href='#fn-{$id}'>{$text}</a></sup>";
+            }, $text);
         // auto link
         if ($this->cfgATL) {
             $text = preg_replace_callback('/(?:^|\s)(https?:\/\/\S+)(?:$|\s)/', function ($matches) {
@@ -551,6 +566,23 @@ class SuperDown
                 $html .= '>' . $this->makeInline($text) . "</{$tag}>";
             }
             $html .= "</tr>";
+        }
+        return $html;
+    }
+
+    private function makeFootnote()
+    {
+        $html = '';
+        if (count($this->footnotes) > 0) {
+            $html .= "<hr />";
+            $html .= "<ul>";
+            foreach ($this->footnotes as $key => $body) {
+                $id = md5($key);
+                $text = $this->escapeSymbol($key);
+                $html .= "<li><a id='fn-$id'>$text</a>: " .
+                    $this->makeInline($body) . "</li>";
+            }
+            $html .= "</ul>";
         }
         return $html;
     }
