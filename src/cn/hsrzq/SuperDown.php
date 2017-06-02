@@ -429,6 +429,11 @@ class SuperDown
 
     private function makeInline($text, $remove = false)
     {
+        // new line
+        $text = preg_replace_callback(
+            '/^(.*)\\\\$/', function ($matches) {
+            return "{$matches[1]}<br />";
+        }, $text);
         // code
         $text = preg_replace_callback(
             '/(?<!\\\\)(`)([^`]+?)(?<!\\\\)\1/',
