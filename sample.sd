@@ -10,13 +10,13 @@ ATL: true
 [toc]
 
 ## INLINE FORMAT
-`Inline code` is put text in \`;
-**Strong** format is put text in two \*;\
-//Italic// format is put text in two \/;
-__Underline__ format is put text in two \_;\
-~~Strickout~~ format is put text in two \~;
-Three \- can make a horizontal line;\
-Put a \\ in end of a line if you want to make a new line.\
+> `Inline code` is put text in \`;
+> **Strong** format is put text in two \*;\
+> //Italic// format is put text in two \/;
+> __Underline__ format is put text in two \_;\
+> ~~Strickout~~ format is put text in two \~;
+> Three \- can make a horizontal line;\
+> Put a \\ in end of a line if you want to make a new line.\
 
 
 ~~__//**Nest** inline// format__ sample~~\

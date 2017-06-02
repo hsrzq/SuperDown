@@ -229,6 +229,15 @@ class SuperDown
                     }
                     break;
                 }
+                // quote
+                case preg_match('/^\s*>/', $line): {
+                    if ($blocks[$position] && $blocks[$position][0] == 'quote') {
+                        $blocks[$position][2] = $key;
+                    } else {
+                        $blocks[++$position] = ['quote', $key, $key];
+                    }
+                    break;
+                }
                 // table
                 case preg_match('/^\|.*\|$/', $line, $matches): {
                     if ($blocks[$position][0] != 'table') {
@@ -438,6 +447,15 @@ class SuperDown
         }
         $html .= "</ul>";
         return $html;
+    }
+
+    private function makeQuote($lines, $block)
+    {
+        list($type, $start, $end, $extra) = $block;
+        $lines = array_map(function ($line) {
+            return preg_replace("/^\s*> ?/", '', $line);
+        }, array_slice($lines, $start, $end - $start + 1));
+        return "<blockquote>" . $this->parseLines($lines) . "</blockquote>";
     }
 
     private function makeTable($lines, $block)
