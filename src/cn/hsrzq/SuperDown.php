@@ -183,6 +183,15 @@ class SuperDown
                     }
                     break;
                 }
+                // definition list
+                case preg_match('/^[;\:]/', $line, $matches): {
+                    if ($blocks[$position] && $blocks[$position][0] == 'dl') {
+                        $blocks[$position][2] = $key;
+                    } else {
+                        $blocks[++$position] = ['dl', $key, $key];
+                    }
+                    break;
+                }
                 default: {
                     $blocks[++$position] = ['normal', $key, $key];
                     break;
@@ -263,6 +272,21 @@ class SuperDown
             $html .= "<li>" . $this->parseLines(array_slice($lines, $block[0], $block[1] - $block[0] + 1)) . "</li>";
         }
         $html .= "</ul>";
+        return $html;
+    }
+
+    private function makeDl(array $lines, array $block)
+    {
+        list($type, $start, $end, $extra) = $block;
+        $lines = array_slice($lines, $start, $end - $start + 1);
+
+        $blocks = $this->parseList($lines, '/^([;\:])(.+)$/');
+        $html = "<dl>";
+        foreach ($blocks as $block) {
+            $tag = $block[2][1] == ';' ? 'dt' : 'dd';
+            $html .= "<$tag>" . $this->parseLines(array_slice($lines, $block[0], $block[1] - $block[0] + 1)) . "</$tag>";
+        }
+        $html .= "</dl>";
         return $html;
     }
 
