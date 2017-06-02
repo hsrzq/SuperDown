@@ -132,6 +132,19 @@ class SuperDown
         $paragraph = false;
         // analyze by line
         foreach ($lines as $key => $line) {
+            // code block is special
+            if (preg_match('/^`{3}(.+)?$/', $line, $matches)) {
+                if ($blocks[$position][0] != 'code' || isset($blocks[$position][2])) {
+                    $blocks[++$position] = ['code', $key];
+                    $blocks[$position][3]['lang'] = trim($matches[1]);
+                } else {
+                    $blocks[$position][2] = $key;
+                }
+                continue;
+            } elseif ($blocks[$position][0] == 'code' && !isset($blocks[$position][2])) {
+                continue;
+            }
+
             switch (true) {
                 // horizontal line
                 case $nested && preg_match('/^\-{3,}$/', $line): {
@@ -310,6 +323,15 @@ class SuperDown
             }
         }
         return $blocks;
+    }
+
+    private function makeCode(array $lines, array $block)
+    {
+        list($type, $start, $end, $extra) = $block;
+        $lines = array_slice($lines, $start + 1, ($end - 1) - ($start + 1) + 1);
+
+        return "<pre><code class='" . ($extra['lang'] ?: '') . "'>"
+            . implode("\n", $lines) . "</code></pre>";
     }
 
     private function makeHr()
