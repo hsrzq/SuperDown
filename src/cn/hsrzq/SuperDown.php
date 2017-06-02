@@ -201,6 +201,23 @@ class SuperDown
                     }
                     break;
                 }
+                // indent line, maybe nested list
+                case preg_match("/^(\t| {{$this->cfgBLK}})(.+)$/", $line): {
+                    switch ($blocks[$position][0]) {
+                        case 'ol':
+                        case 'ul':
+                        case 'dl':
+                        case 'tl': {
+                            $blocks[$position][2] = $key;
+                            break;
+                        }
+                        default: {
+                            $blocks[++$position] = ['normal', $key, $key];
+                            break;
+                        }
+                    }
+                    break;
+                }
                 default: {
                     $blocks[++$position] = ['normal', $key, $key];
                     break;
@@ -416,6 +433,9 @@ class SuperDown
             if (preg_match($pattern, $line, $matches)) {
                 $blocks[++$position] = [$key, $key, $matches];
                 $lines[$key] = trim($matches[2]);
+            } elseif (preg_match("/^(\t| {{$this->cfgBLK}})(.+)$/", $line, $matches)) {
+                $blocks[$position][1] = $key;
+                $lines[$key] = $matches[2];
             } else {
                 $blocks[$position][1] = $key;
             }
