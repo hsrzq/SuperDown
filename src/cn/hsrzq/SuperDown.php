@@ -201,6 +201,54 @@ class SuperDown
                     }
                     break;
                 }
+                // table
+                case preg_match('/^\|.*\|$/', $line, $matches): {
+                    if ($blocks[$position][0] != 'table') {
+                        // check next line
+                        if (preg_match('/^\|.*\|$/', $lines[$key + 1])) {
+                            $blocks[++$position] = ['table', $key, $key];
+                        } else {
+                            $blocks[++$position] = ['normal', $key, $key];
+                            continue;
+                        }
+                    }
+                    switch (true) {
+                        // caption
+                        case preg_match('/^\|=\-.+\-=\|$/', $line)
+                            && $blocks[$position][1] == $key: {
+                            $blocks[$position][3]['caption'] = $key;
+                            break;
+                        }
+                        case preg_match('/^\|:?([=\-])\1*:?\|(:?\1+:?\|)*$/', $line, $matches)
+                            && !isset($blocks[$position][3]['thead']): {
+                            $blocks[$position][3]['thead'] = $key;
+                            $blocks[$position][3]['tfoot'] = $matches[1] == "=";
+
+                            $cols = explode('|', trim($matches[0], '|'));
+                            $aligns = [];
+                            foreach ($cols as $col) {
+                                $align = 'none';
+                                if (preg_match('/^\s*(:?)[\-=]+(:?)\s*$/', $col, $matches)) {
+                                    if (!empty($matches[1]) && !empty($matches[2])) {
+                                        $align = 'center';
+                                    } else if (!empty($matches[1])) {
+                                        $align = 'left';
+                                    } else if (!empty($matches[2])) {
+                                        $align = 'right';
+                                    }
+                                }
+                                $aligns[] = $align;
+                            }
+                            $blocks[$position][3]['aligns'] = $aligns;
+                            break;
+                        }
+                        default: {
+                            $blocks[$position][2] = $key;
+                            break;
+                        }
+                    }
+                    break;
+                }
                 // indent line, maybe nested list
                 case preg_match("/^(\t| {{$this->cfgBLK}})(.+)$/", $line): {
                     switch ($blocks[$position][0]) {
@@ -333,6 +381,31 @@ class SuperDown
         return $html;
     }
 
+    private function makeTable($lines, $block)
+    {
+        list($type, $start, $end, $extra) = $block;
+
+        $html = "<table>";
+        if (isset($block[3]['caption'])) {
+            $html .= preg_replace_callback('/^\|=\-(.+)\-=\|$/',
+                function ($matches) {
+                    return "<caption>" . htmlspecialchars($matches[1]) . "</caption>";
+                }, $lines[$block[3]['caption']]);
+            $start = $block[3]['caption'] + 1;
+        }
+        if (isset($block[3]['thead'])) {
+            $temp = $this->makeTableRows(array_slice($lines, $start, $block[3]['thead'] - $start), $extra['aligns'], true);
+            $html .= "<thead>$temp</thead>";
+            if ($block[3]['tfoot']) {
+                $html .= "<tfoot>$temp</tfoot>";
+            }
+            $start = $block[3]['thead'] + 1;
+        }
+        $html .= "<tbody>" . $this->makeTableRows(array_slice($lines, $start, $end - $start + 1), $extra['aligns']) . "</tbody>";
+        $html .= "</table>";
+        return $html;
+    }
+
     private function makeNormal(array $lines, $block)
     {
         list($type, $start, $end, $extra) = $block;
@@ -442,5 +515,43 @@ class SuperDown
         }
 
         return $blocks;
+    }
+
+    private function makeTableRows($lines, $aligns = null, $head = false)
+    {
+        $html = '';
+        foreach ($lines as $line) {
+            $datas = array_map(function ($data) {
+                return preg_match("/^\s+$/", $data) ? ' ' : trim($data);
+            }, explode('|', substr($line, 1, -1)));
+
+            $columns = [];
+            $last = -1;
+            foreach ($datas as $data) {
+                if (strlen($data) > 0) {
+                    $last++;
+                    $columns[$last] = [isset($columns[$last]) ? $columns[$last][0] + 1 : 1, $data];
+                } else if (isset($columns[$last])) {
+                    $columns[$last][0]++;
+                } else {
+                    $columns[0] = [1, $data];
+                }
+            }
+
+            $html .= "<tr>";
+            foreach ($columns as $key => $column) {
+                list ($num, $text) = $column;
+                $tag = $head ? 'th' : 'td';
+                $html .= "<$tag";
+                if ($num > 1) {
+                    $html .= " colspan='{$num}' align='center'";
+                } elseif (isset($aligns[$key]) && $aligns[$key] != 'none') {
+                    $html .= " align='{$aligns[$key]}'";
+                }
+                $html .= '>' . $this->makeInline($text) . "</{$tag}>";
+            }
+            $html .= "</tr>";
+        }
+        return $html;
     }
 }
